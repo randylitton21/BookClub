@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function clubDoc(clubId) {
+      return get(/databases/$(database)/documents/clubs/$(clubId)).data;
+    }
+
+    function isMember(clubId) {
+      return isSignedIn() && request.auth.uid in clubDoc(clubId).memberUids;
+    }
+
+    function isClubCreator(clubId) {
+      return isSignedIn() && clubDoc(clubId).createdBy == request.auth.uid;
+    }
+
+    function weekDoc(weekId) {
+      return get(/databases/$(database)/documents/weeks/$(weekId)).data;
+    }
+
+    function weekClubId(weekId) {
+      return weekDoc(weekId).clubId;
+    }
+
+    function isMemberOfWeek(weekId) {
+      return isMember(weekClubId(weekId));
+    }
+
+    function quizResultPath(weekId) {
+      return /databases/$(database)/documents/quizResults/$(request.auth.uid + '_' + weekId);
+    }
+
+    function hasPassedWeek(weekId) {
+      return exists(quizResultPath(weekId))
+        && get(quizResultPath(weekId)).data.passed == true;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(userId);
+    }
+
+    match /clubs/{clubId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.auth.uid in request.resource.data.memberUids
+        && request.resource.data.clubId == clubId;
+      allow update: if isSignedIn() && isClubCreator(clubId);
+    }
+
+    match /weeks/{weekId} {
+      allow read: if isSignedIn() && isMember(resource.data.clubId);
+      allow create: if isSignedIn()
+        && isClubCreator(request.resource.data.clubId)
+        && request.resource.data.weekId == weekId;
+      allow update: if isSignedIn() && isClubCreator(resource.data.clubId);
+    }
+
+    match /quizzes/{quizId} {
+      allow read: if isSignedIn() && isMemberOfWeek(resource.data.weekId);
+      allow create: if isSignedIn()
+        && isClubCreator(weekClubId(request.resource.data.weekId));
+      allow update: if isSignedIn()
+        && isClubCreator(weekClubId(resource.data.weekId));
+    }
+
+    match /quizResults/{resultId} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create, update: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && isMemberOfWeek(request.resource.data.weekId)
+        && resultId == request.auth.uid + '_' + request.resource.data.weekId;
+    }
+
+    match /posts/{postId} {
+      allow read: if isSignedIn() && hasPassedWeek(resource.data.weekId);
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && hasPassedWeek(request.resource.data.weekId)
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000;
+    }
+
+    match /joinRequests/{requestId} {
+      function joinRequestClubId() {
+        return resource.data.clubId;
+      }
+
+      function isJoinRequestOwner() {
+        return isSignedIn() && resource.data.uid == request.auth.uid;
+      }
+
+      function canCreateJoinRequest() {
+        let clubId = request.resource.data.clubId;
+        return isSignedIn()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.status == 'pending'
+          && request.resource.data.clubId is string
+          && request.resource.data.displayName is string
+          && exists(/databases/$(database)/documents/clubs/$(clubId))
+          && !(request.auth.uid in get(/databases/$(database)/documents/clubs/$(clubId)).data.memberUids)
+          && requestId == clubId + '_' + request.auth.uid;
+      }
+
+      // get: allow non-members to read their own request doc (including when it does not exist yet)
+      allow get: if isSignedIn() && (
+        resource == null
+        || isJoinRequestOwner()
+        || isClubCreator(joinRequestClubId())
+      );
+
+      // list: requester sees own requests; club creator sees requests for their club
+      allow list: if isSignedIn() && (
+        isJoinRequestOwner()
+        || isClubCreator(joinRequestClubId())
+      );
+
+      allow create: if canCreateJoinRequest();
+
+      allow update: if isSignedIn() && (
+        isClubCreator(resource.data.clubId)
+        || (isJoinRequestOwner() && resource.data.status == 'rejected' && request.resource.data.status == 'pending')
+      );
+    }
+  }
+}
