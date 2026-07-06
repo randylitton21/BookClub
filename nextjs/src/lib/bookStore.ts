@@ -11,6 +11,7 @@ import {
   updateDoc,
   where,
   deleteDoc,
+  deleteField,
 } from "firebase/firestore";
 import { firestore } from "./firebaseClient";
 import { bookClubLinkId, bookIdFromTitleAuthor } from "./bookIds";
@@ -81,7 +82,7 @@ export async function upsertBookClubLink(input: {
   if (!firestore) return;
   await ensureBookDoc(input.bookId, input.title, input.author);
   const linkId = bookClubLinkId(input.bookId, input.club.clubId);
-  const link: BookClubLink = {
+  const link: Record<string, unknown> = {
     linkId,
     bookId: input.bookId,
     clubId: input.club.clubId,
@@ -89,11 +90,17 @@ export async function upsertBookClubLink(input: {
     memberCount: input.club.memberUids.length,
     status: input.status,
     expectedStartDate: input.expectedStartDate ?? null,
-    readId: input.readId,
-    leaderReviewSnippet: input.leaderReviewSnippet,
     updatedAt: serverTimestamp(),
   };
-  await setDoc(doc(firestore, "bookClubs", linkId), link);
+  if (input.status === "finished") {
+    if (input.readId) link.readId = input.readId;
+    if (input.leaderReviewSnippet) link.leaderReviewSnippet = input.leaderReviewSnippet;
+  } else {
+    // Clear finished-only fields when status is reading or queued.
+    link.readId = deleteField();
+    link.leaderReviewSnippet = deleteField();
+  }
+  await setDoc(doc(firestore, "bookClubs", linkId), link, { merge: true });
   await recomputeBookCounts(input.bookId);
 }
 

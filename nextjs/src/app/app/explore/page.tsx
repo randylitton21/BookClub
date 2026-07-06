@@ -12,28 +12,20 @@ export default function ExplorePage() {
   const [rebuilding, setRebuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (options?: { rebuildIfEmpty?: boolean }) => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      let list = await listBooksForExplore();
-      if (list.length === 0 && options?.rebuildIfEmpty) {
-        setRebuilding(true);
-        await rebuildBookCatalog();
-        list = await listBooksForExplore();
-        setRebuilding(false);
-      }
-      setBooks(list);
+      setBooks(await listBooksForExplore());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load books.");
     } finally {
       setLoading(false);
-      setRebuilding(false);
     }
   }, []);
 
   useEffect(() => {
-    load({ rebuildIfEmpty: true });
+    load();
   }, [load]);
 
   async function handleRebuild() {
@@ -63,7 +55,8 @@ export default function ExplorePage() {
       ) : books.length === 0 ? (
         <div className="card" style={{ marginTop: 14 }}>
           <p className="muted" style={{ marginBottom: 12 }}>
-            No books in the catalog yet. Close a story in a club, or rebuild from existing clubs.
+            No books in the catalog yet. The list updates when clubs start, queue, or close a
+            book. If something looks missing, use Rebuild catalog below.
           </p>
           <button type="button" className="btnSecondary" disabled={rebuilding} onClick={handleRebuild}>
             Rebuild catalog
@@ -87,7 +80,7 @@ export default function ExplorePage() {
           >
             Rebuild catalog
           </button>
-          {" "}— refresh from all clubs and finished reads
+          {" "}— repair tool: rescans all clubs and finished reads (use only if data looks wrong)
         </p>
       )}
 
