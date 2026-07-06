@@ -8,11 +8,8 @@ import {
   createClub,
   getClub,
   listClubsForUser,
-  createJoinRequest,
 } from "@/lib/clubStore";
-import { getUserProfile } from "@/lib/userStore";
 import type { Club } from "@/lib/types";
-import PageTitleCard from "../_components/PageTitleCard";
 
 export default function ClubsHomePage() {
   const { user } = useAuth();
@@ -28,7 +25,6 @@ export default function ClubsHomePage() {
   const [bookAuthor, setBookAuthor] = useState("");
 
   const [joinClubId, setJoinClubId] = useState("");
-  const [joinPreview, setJoinPreview] = useState<Club | null>(null);
   const [joinBusy, setJoinBusy] = useState(false);
 
   useEffect(() => {
@@ -61,61 +57,41 @@ export default function ClubsHomePage() {
   async function handleLookupClub() {
     setError(null);
     setMessage(null);
-    setJoinPreview(null);
     if (!joinClubId.trim()) return;
-    const club = await getClub(joinClubId.trim());
-    if (!club) {
-      setError("No club found with that ID.");
-      return;
-    }
-    if (user && club.memberUids.includes(user.uid)) {
-      router.push(`/app/clubs/${club.clubId}`);
-      return;
-    }
-    setJoinPreview(club);
-  }
-
-  async function handleRequestJoin() {
-    if (!user || !joinPreview) return;
-    setError(null);
-    setMessage(null);
     setJoinBusy(true);
     try {
-      const profile = await getUserProfile(user.uid);
-      await createJoinRequest({
-        clubId: joinPreview.clubId,
-        uid: user.uid,
-        displayName: profile?.displayName || user.email?.split("@")[0] || "Reader",
-      });
-      setMessage(`Request sent to join "${joinPreview.name}". The creator must approve.`);
-      setJoinPreview(null);
-      setJoinClubId("");
+      const club = await getClub(joinClubId.trim());
+      if (!club) {
+        setError("No club found with that ID.");
+        return;
+      }
+      router.push(`/app/clubs/${club.clubId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not send join request.");
+      setError(e instanceof Error ? e.message : "Could not look up club.");
     } finally {
       setJoinBusy(false);
     }
   }
 
   return (
-    <>
-      <PageTitleCard
-        title="My Clubs"
-        subtitle="Create a club or join one with a Club ID."
-        actions={
-          <button
-            type="button"
-            className="btnPrimary"
-            onClick={() => setShowCreate((v) => !v)}
-          >
-            {showCreate ? "Cancel" : "Create Club"}
-          </button>
-        }
-      />
+    <div className="card" style={{ marginTop: 14 }}>
+      <div className="myClubsHeader">
+        <div>
+          <h1 style={{ marginBottom: 4 }}>My Clubs</h1>
+          <p className="muted">Tap a club to open it, or join with a Club ID below.</p>
+        </div>
+        <button
+          type="button"
+          className="btnPrimary"
+          onClick={() => setShowCreate((v) => !v)}
+        >
+          {showCreate ? "Cancel" : "Create Club"}
+        </button>
+      </div>
 
       {showCreate && (
-        <div className="card" style={{ marginTop: 14 }}>
-          <h2 style={{ marginBottom: 10 }}>New club</h2>
+        <div className="myClubsCreate" style={{ marginTop: 14 }}>
+          <h2 style={{ marginBottom: 10, fontSize: 18 }}>New club</h2>
           <div className="formGrid">
             <label style={{ display: "grid", gap: 6 }}>
               <span className="muted">Club name</span>
@@ -152,12 +128,38 @@ export default function ClubsHomePage() {
             >
               {joinBusy ? "Creating..." : "Create Club"}
             </button>
+            <p className="muted" style={{ fontSize: 13 }}>
+              As club leader, closing the story for each book is your duty when the club finishes a read.
+            </p>
           </div>
         </div>
       )}
 
-      <div className="card" style={{ marginTop: 14 }}>
-        <h2 style={{ marginBottom: 10 }}>Join a club</h2>
+      <div className="myClubsList" style={{ marginTop: 14 }}>
+        {loading ? (
+          <p className="muted">Loading...</p>
+        ) : clubs.length === 0 ? (
+          <p className="muted">No clubs yet. Create one or join with a Club ID below.</p>
+        ) : (
+          <div className="formGrid">
+            {clubs.map((club) => (
+              <Link
+                key={club.clubId}
+                href={`/app/clubs/${club.clubId}`}
+                className="card myClubsListItem"
+              >
+                <strong>{club.name}</strong>
+                <div className="muted" style={{ fontSize: 14 }}>
+                  {club.bookTitle} by {club.bookAuthor}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="myClubsJoin" style={{ marginTop: 18, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
+        <h2 style={{ marginBottom: 10, fontSize: 18 }}>Join a club</h2>
         <div className="formGrid">
           <label style={{ display: "grid", gap: 6 }}>
             <span className="muted">Club ID</span>
@@ -168,27 +170,17 @@ export default function ClubsHomePage() {
               placeholder="8-character ID from the club creator"
             />
           </label>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button type="button" className="btnSecondary" onClick={handleLookupClub}>
-              Look up club
-            </button>
-            {joinPreview && (
-              <button
-                type="button"
-                className="btnPrimary"
-                disabled={joinBusy}
-                onClick={handleRequestJoin}
-              >
-                Request to Join
-              </button>
-            )}
-          </div>
-          {joinPreview && (
-            <p className="muted">
-              Found: <strong>{joinPreview.name}</strong> — {joinPreview.bookTitle} by{" "}
-              {joinPreview.bookAuthor}
-            </p>
-          )}
+          <button
+            type="button"
+            className="btnPrimary"
+            disabled={joinBusy || !joinClubId.trim()}
+            onClick={handleLookupClub}
+          >
+            {joinBusy ? "Looking up..." : "View club"}
+          </button>
+          <p className="muted" style={{ fontSize: 13 }}>
+            Opens the club homepage where you can see what they&apos;re reading and request to join.
+          </p>
         </div>
       </div>
 
@@ -198,34 +190,6 @@ export default function ClubsHomePage() {
           {error}
         </div>
       )}
-
-      <div className="card" style={{ marginTop: 14 }}>
-        <h2 style={{ marginBottom: 10 }}>Clubs you&apos;re in</h2>
-        {loading ? (
-          <p className="muted">Loading...</p>
-        ) : clubs.length === 0 ? (
-          <p className="muted">No clubs yet. Create one or request to join with a Club ID.</p>
-        ) : (
-          <div className="formGrid">
-            {clubs.map((club) => (
-              <Link
-                key={club.clubId}
-                href={`/app/clubs/${club.clubId}`}
-                className="card"
-                style={{ display: "block" }}
-              >
-                <strong>{club.name}</strong>
-                <div className="muted" style={{ fontSize: 14 }}>
-                  {club.bookTitle} by {club.bookAuthor}
-                </div>
-                <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-                  Club ID: {club.clubId}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+    </div>
   );
 }

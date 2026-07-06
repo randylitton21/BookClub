@@ -1,0 +1,26 @@
+---
+description: Check DEFERRED_FIXES.md at session start and remind user of open follow-ups
+alwaysApply: true
+---
+
+# Deferred fixes backlog
+
+This project keeps postponed fixes in **`DEFERRED_FIXES.md`** at the repo root.
+
+## At the start of every session
+
+1. Read `DEFERRED_FIXES.md`.
+2. If the **Open** section has items, briefly remind the user (one short bullet list). Do not block work — mention it once, then continue their request.
+3. If **Open** is empty, skip the reminder.
+
+## When a deferred item is fixed
+
+1. Remove it from **Open** in `DEFERRED_FIXES.md`.
+2. Add a one-line entry under **Done** with the completion date.
+3. Do not leave duplicate entries.
+
+## When we discover a new postponed fix
+
+Add it to **Open** in `DEFERRED_FIXES.md` with: symptom, when it happens, cause (if known), fix direction, relevant files, and date added.
+
+Keep entries concise. One concern per item.

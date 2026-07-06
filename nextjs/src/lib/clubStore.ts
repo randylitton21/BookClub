@@ -15,6 +15,8 @@ import {
 } from "firebase/firestore";
 import { firestore } from "./firebaseClient";
 import { generateClubId } from "./ids";
+import { defaultActiveReadId } from "./readIds";
+import { syncClubQueuedBook, syncClubReadingBook } from "./bookStore";
 import type { Club, JoinRequest } from "./types";
 
 export async function createClub(input: {
@@ -32,8 +34,12 @@ export async function createClub(input: {
     bookAuthor: input.bookAuthor.trim(),
     createdBy: input.creatorUid,
     memberUids: [input.creatorUid],
+    activeReadId: defaultActiveReadId(clubId),
+    storyCloseStatus: "none",
+    nextRead: null,
   };
   await setDoc(doc(firestore, "clubs", clubId), club);
+  await syncClubReadingBook(club);
   return club;
 }
 
@@ -45,6 +51,15 @@ export async function getClub(clubId: string): Promise<Club | null> {
     return lower.exists() ? (lower.data() as Club) : null;
   }
   return snap.data() as Club;
+}
+
+/** Firestore document id for a club (handles ID casing). */
+export async function resolveClubDocId(clubId: string): Promise<string | null> {
+  if (!firestore) return null;
+  const upperSnap = await getDoc(doc(firestore, "clubs", clubId.toUpperCase()));
+  if (upperSnap.exists()) return upperSnap.id;
+  const lowerSnap = await getDoc(doc(firestore, "clubs", clubId));
+  return lowerSnap.exists() ? lowerSnap.id : null;
 }
 
 export async function listClubsForUser(uid: string): Promise<Club[]> {

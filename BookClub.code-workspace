@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "Book Club",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "nextjs/node_modules/typescript/lib"
+  }
+}

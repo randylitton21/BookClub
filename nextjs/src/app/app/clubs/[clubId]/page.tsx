@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import {
   approveJoinRequest,
@@ -10,40 +10,45 @@ import {
   onPendingJoinRequestsChange,
   rejectJoinRequest,
 } from "@/lib/clubStore";
-import { addWeek, listWeeksForClub } from "@/lib/weekStore";
-import { getQuizResultsForUser, saveQuizForWeek } from "@/lib/quizStore";
-import type { Club, JoinRequest, QuizQuestion, QuizResult, Week } from "@/lib/types";
+import { clubActiveReadId } from "@/lib/readIds";
+import { listClosedReads } from "@/lib/readStore";
+import { listWeeksForClub } from "@/lib/weekStore";
+import { getUserProfile, getUserProfiles } from "@/lib/userStore";
+import type { Club, ClosedRead, JoinRequest, UserProfile, Week } from "@/lib/types";
 import PageTitleCard from "../../../_components/PageTitleCard";
+import ReturnNavButton from "../../_components/ReturnNavButton";
+import ClubBookHero from "../_components/ClubBookHero";
+import ClubStatsRow from "../_components/ClubStatsRow";
+import ClubStorySection from "../_components/ClubStorySection";
+import PendingJoinRequestsPanel from "../_components/PendingJoinRequestsPanel";
+import ClubWeekDiscussionPanel from "../_components/ClubWeekDiscussionPanel";
+import NonMemberClubView from "../_components/NonMemberClubView";
+import ClubBooksReadSection from "../_components/ClubBooksReadSection";
 
-const emptyQuestion = (): QuizQuestion => ({
-  questionText: "",
-  choices: ["", ""],
-  correctIndex: 0,
-});
-
-export default function ClubPage() {
+export default function ClubHomePage() {
   const params = useParams();
+  const pathname = usePathname();
   const clubId = String(params.clubId || "");
   const { user } = useAuth();
 
   const [club, setClub] = useState<Club | null>(null);
   const [weeks, setWeeks] = useState<Week[]>([]);
-  const [results, setResults] = useState<Record<string, QuizResult>>({});
+  const [closedReads, setClosedReads] = useState<ClosedRead[]>([]);
+  const [closedReadsError, setClosedReadsError] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
+  const [creatorName, setCreatorName] = useState("Club leader");
+  const [displayName, setDisplayName] = useState("Reader");
   const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [weekLabel, setWeekLabel] = useState("");
-  const [setupWeekId, setSetupWeekId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([emptyQuestion()]);
   const [busy, setBusy] = useState(false);
 
   const isCreator = user && club && club.createdBy === user.uid;
   const isMember = user && club && club.memberUids.includes(user.uid);
 
-  const loadAll = useCallback(async () => {
-    if (!user || !clubId) return;
-    setLoading(true);
+  const loadClub = useCallback(async (options?: { silent?: boolean }) => {
+    if (!clubId) return;
+    if (!options?.silent) setLoading(true);
     setError(null);
     try {
       const c = await getClub(clubId);
@@ -52,87 +57,53 @@ export default function ClubPage() {
         setClub(null);
         return;
       }
-      if (!c.memberUids.includes(user.uid)) {
-        setError("You are not a member of this club yet.");
-        setClub(c);
+      setClub(c);
+      setClosedReadsError(null);
+      try {
+        setClosedReads(await listClosedReads(c.clubId));
+      } catch (e) {
+        setClosedReads([]);
+        const msg = e instanceof Error ? e.message : "Could not load finished books.";
+        setClosedReadsError(msg);
+      }
+
+      const creator = await getUserProfile(c.createdBy);
+      setCreatorName(creator?.displayName || "Club leader");
+
+      if (!user || !c.memberUids.includes(user.uid)) {
         return;
       }
-      setClub(c);
-      const w = await listWeeksForClub(c.clubId);
+
+      const profile = await getUserProfile(user.uid);
+      setDisplayName(profile?.displayName || user.email?.split("@")[0] || "Reader");
+
+      const w = await listWeeksForClub(c.clubId, clubActiveReadId(c));
       setWeeks(w);
-      const r = await getQuizResultsForUser(
-        user.uid,
-        w.map((wk) => wk.weekId)
-      );
-      setResults(r);
+      setProfiles(await getUserProfiles(c.memberUids));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load club.");
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
     }
   }, [clubId, user]);
 
   useEffect(() => {
-    if (!club || !user || club.createdBy !== user.uid) {
-    setPendingRequests([]);
-    return;
-  }
-  return onPendingJoinRequestsChange(club.clubId, setPendingRequests);
-  }, [club, user]);
+    loadClub();
+  }, [loadClub, pathname]);
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
-
-  async function handleAddWeek() {
-    if (!club || !weekLabel.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await addWeek({
-        clubId: club.clubId,
-        label: weekLabel.trim(),
-        order: weeks.length + 1,
-      });
-      setWeekLabel("");
-      await loadAll();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not add week.");
-    } finally {
-      setBusy(false);
+    if (!club || !user || club.createdBy !== user.uid) {
+      setPendingRequests([]);
+      return;
     }
-  }
-
-  async function handleSaveQuiz() {
-    if (!setupWeekId) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const cleaned = questions
-        .map((q) => ({
-          ...q,
-          questionText: q.questionText.trim(),
-          choices: q.choices.map((c) => c.trim()).filter(Boolean),
-        }))
-        .filter((q) => q.questionText && q.choices.length >= 2);
-      if (cleaned.length === 0) {
-        throw new Error("Add at least one question with two choices.");
-      }
-      await saveQuizForWeek(setupWeekId, cleaned);
-      setSetupWeekId(null);
-      setQuestions([emptyQuestion()]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save quiz.");
-    } finally {
-      setBusy(false);
-    }
-  }
+    return onPendingJoinRequestsChange(club.clubId, setPendingRequests);
+  }, [club, user]);
 
   async function handleApprove(req: JoinRequest) {
     setBusy(true);
     try {
       await approveJoinRequest(req);
-      await loadAll();
+      await loadClub();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not approve request.");
     } finally {
@@ -144,19 +115,12 @@ export default function ClubPage() {
     setBusy(true);
     try {
       await rejectJoinRequest(req);
-      await loadAll();
+      await loadClub();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not reject request.");
     } finally {
       setBusy(false);
     }
-  }
-
-  function weekStatus(weekId: string) {
-    const r = results[weekId];
-    if (r?.passed) return "passed";
-    if (r && !r.passed) return "failed";
-    return "locked";
   }
 
   if (loading) {
@@ -174,17 +138,44 @@ export default function ClubPage() {
     );
   }
 
+  if (!isMember && user) {
+    return (
+      <>
+        <PageTitleCard
+          title={club.name}
+          subtitle="Request to join this club"
+          actions={
+            <ReturnNavButton fallbackHref="/app" fallbackLabel="My clubs" />
+          }
+        />
+        <NonMemberClubView
+          club={club}
+          userUid={user.uid}
+          creatorName={creatorName}
+          closedReads={closedReads}
+          closedReadsError={closedReadsError}
+        />
+      </>
+    );
+  }
+
   if (!isMember) {
     return (
-      <div className="card">
-        <p>{error || "You need approval to access this club."}</p>
-        <p className="muted" style={{ marginTop: 8 }}>
-          Club ID: {club.clubId} — request to join from the clubs list.
-        </p>
-        <Link href="/app" className="btnSecondary" style={{ marginTop: 12, display: "inline-block" }}>
-          Back to clubs
-        </Link>
-      </div>
+      <>
+        <PageTitleCard
+          title={club.name}
+          subtitle={`Led by ${creatorName}`}
+          actions={
+            <ReturnNavButton fallbackHref="/app/explore" fallbackLabel="Browse books" />
+          }
+        />
+        <NonMemberClubView
+          club={club}
+          creatorName={creatorName}
+          closedReads={closedReads}
+          closedReadsError={closedReadsError}
+        />
+      </>
     );
   }
 
@@ -192,224 +183,50 @@ export default function ClubPage() {
     <>
       <PageTitleCard
         title={club.name}
-        subtitle={`${club.bookTitle} by ${club.bookAuthor}`}
+        subtitle={`Led by ${creatorName}`}
         actions={
-          <Link href="/app" className="btnSecondary">
-            All clubs
-          </Link>
+          <ReturnNavButton fallbackHref="/app" fallbackLabel="My clubs" />
         }
       />
 
-      <div className="card" style={{ marginTop: 14 }}>
-        <p className="muted">
-          Share this Club ID so others can request to join:{" "}
-          <strong style={{ letterSpacing: "0.06em" }}>{club.clubId}</strong>
-        </p>
-      </div>
+      <div className="clubHomeStack">
+        <ClubBookHero club={club} />
+        <ClubStatsRow club={club} profiles={profiles} closedReads={closedReads} />
+        <ClubBooksReadSection
+          clubId={club.clubId}
+          closedReads={closedReads}
+          loadError={closedReadsError}
+        />
 
-      {isCreator && (
-        <div className="card creatorPanel joinRequestsPanel" style={{ marginTop: 14 }}>
-          <h2 style={{ marginBottom: 10 }}>Pending join requests</h2>
-          {pendingRequests.length === 0 ? (
-            <p className="muted">No pending requests right now.</p>
-          ) : (
-            pendingRequests.map((req) => (
-              <div key={req.requestId} className="joinRequestRow">
-                <span className="joinRequestName">{req.displayName}</span>
-                <div className="joinRequestActions">
-                  <button
-                    type="button"
-                    className="btnPrimary btnSmall"
-                    disabled={busy}
-                    onClick={() => handleApprove(req)}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    className="btnSecondary btnSmall"
-                    disabled={busy}
-                    onClick={() => handleReject(req)}
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+        <ClubWeekDiscussionPanel
+          club={club}
+          weeks={weeks}
+          uid={user!.uid}
+          displayName={displayName}
+          isCreator={!!isCreator}
+        />
 
-      {isCreator && (
-        <div className="card creatorPanel" style={{ marginTop: 14 }}>
-          <h2 style={{ marginBottom: 10 }}>Club setup (creator only)</h2>
-          <div className="formGrid">
-            <label style={{ display: "grid", gap: 6 }}>
-              <span className="muted">New reading week</span>
-              <input
-                className="inputField"
-                value={weekLabel}
-                onChange={(e) => setWeekLabel(e.target.value)}
-                placeholder='e.g. "Chapters 1–4"'
-              />
-            </label>
-            <button
-              type="button"
-              className="btnPrimary"
-              disabled={busy || !weekLabel.trim()}
-              onClick={handleAddWeek}
-            >
-              Add week
-            </button>
-          </div>
+        <ClubStorySection
+          club={club}
+          uid={user!.uid}
+          displayName={displayName}
+          isCreator={!!isCreator}
+          onUpdated={() => loadClub({ silent: true })}
+        />
 
-          {setupWeekId && (
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-              <h3 style={{ marginBottom: 10 }}>
-                Quiz for {weeks.find((w) => w.weekId === setupWeekId)?.label}
-              </h3>
-              {questions.map((q, qi) => (
-                <div key={qi} className="card" style={{ marginBottom: 10 }}>
-                  <label style={{ display: "grid", gap: 6, marginBottom: 8 }}>
-                    <span className="muted">Question {qi + 1}</span>
-                    <input
-                      className="inputField"
-                      value={q.questionText}
-                      onChange={(e) => {
-                        const next = [...questions];
-                        next[qi] = { ...next[qi], questionText: e.target.value };
-                        setQuestions(next);
-                      }}
-                    />
-                  </label>
-                  {q.choices.map((choice, ci) => (
-                    <label key={ci} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                      <input
-                        type="radio"
-                        name={`correct-${qi}`}
-                        checked={q.correctIndex === ci}
-                        onChange={() => {
-                          const next = [...questions];
-                          next[qi] = { ...next[qi], correctIndex: ci };
-                          setQuestions(next);
-                        }}
-                      />
-                      <input
-                        className="inputField"
-                        value={choice}
-                        placeholder={`Choice ${ci + 1}`}
-                        onChange={(e) => {
-                          const next = [...questions];
-                          const choices = [...next[qi].choices];
-                          choices[ci] = e.target.value;
-                          next[qi] = { ...next[qi], choices };
-                          setQuestions(next);
-                        }}
-                      />
-                    </label>
-                  ))}
-                  <button
-                    type="button"
-                    className="btnSecondary btnSmall"
-                    onClick={() => {
-                      const next = [...questions];
-                      next[qi] = { ...next[qi], choices: [...next[qi].choices, ""] };
-                      setQuestions(next);
-                    }}
-                  >
-                    Add choice
-                  </button>
-                </div>
-              ))}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="btnSecondary btnSmall"
-                  onClick={() => setQuestions([...questions, emptyQuestion()])}
-                >
-                  Add question
-                </button>
-                <button type="button" className="btnPrimary btnSmall" disabled={busy} onClick={handleSaveQuiz}>
-                  Save quiz
-                </button>
-                <button
-                  type="button"
-                  className="btnSecondary btnSmall"
-                  onClick={() => {
-                    setSetupWeekId(null);
-                    setQuestions([emptyQuestion()]);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        {isCreator && (
+          <PendingJoinRequestsPanel
+            requests={pendingRequests}
+            busy={busy}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        )}
 
-      <div className="card" style={{ marginTop: 14 }}>
-        <h2 style={{ marginBottom: 10 }}>Reading weeks</h2>
-        {weeks.length === 0 ? (
-          <p className="muted">
-            {isCreator
-              ? "Add a reading week above, then attach a quiz."
-              : "The club creator has not added weeks yet."}
-          </p>
-        ) : (
-          weeks.map((week) => {
-            const status = weekStatus(week.weekId);
-            return (
-              <div key={week.weekId} className="weekRow">
-                <div>
-                  <strong>{week.label}</strong>
-                  <div style={{ marginTop: 4 }}>
-                    {status === "passed" && (
-                      <span className="statusBadge statusBadge--passed">Discussion unlocked</span>
-                    )}
-                    {status === "failed" && (
-                      <span className="statusBadge statusBadge--locked">Quiz failed — retry</span>
-                    )}
-                    {status === "locked" && (
-                      <span className="statusBadge statusBadge--ready">Pass quiz to unlock</span>
-                    )}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <Link
-                    href={`/app/clubs/${club.clubId}/weeks/${week.weekId}/quiz`}
-                    className="btnSecondary btnSmall"
-                  >
-                    {status === "passed" ? "Retake quiz" : "Take quiz"}
-                  </Link>
-                  {status === "passed" ? (
-                    <Link
-                      href={`/app/clubs/${club.clubId}/weeks/${week.weekId}/discussion`}
-                      className="btnPrimary btnSmall"
-                    >
-                      Discussion
-                    </Link>
-                  ) : (
-                    <span className="btnSecondary btnSmall" style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                      Discussion locked
-                    </span>
-                  )}
-                  {isCreator && (
-                    <button
-                      type="button"
-                      className="btnSecondary btnSmall"
-                      onClick={() => {
-                        setSetupWeekId(week.weekId);
-                        setQuestions([emptyQuestion()]);
-                      }}
-                    >
-                      Edit quiz
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })
+        {isCreator && (
+          <Link href={`/app/clubs/${club.clubId}/manage`} className="btnSecondary" style={{ textAlign: "center" }}>
+            Manage club
+          </Link>
         )}
       </div>
 

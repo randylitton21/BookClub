@@ -56,6 +56,53 @@ service cloud.firestore {
       allow update: if isSignedIn() && isClubCreator(clubId);
     }
 
+    match /closedReads/{readId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && isClubCreator(request.resource.data.clubId);
+      allow update, delete: if isSignedIn()
+        && isClubCreator(resource.data.clubId);
+    }
+
+    match /books/{bookId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /bookClubs/{linkId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /storyCloses/{clubId} {
+      allow read: if isSignedIn() && isMember(clubId);
+      allow create: if isSignedIn() && isClubCreator(clubId);
+      allow delete: if isSignedIn() && isClubCreator(clubId);
+      allow update: if false;
+    }
+
+    match /storyCloseReviews/{reviewId} {
+      function reviewClubId() {
+        return resource.data.clubId;
+      }
+
+      function incomingReviewClubId() {
+        return request.resource.data.clubId;
+      }
+
+      allow read: if isSignedIn() && isMember(reviewClubId());
+      allow create, update: if isSignedIn()
+        && isMember(incomingReviewClubId())
+        && request.resource.data.uid == request.auth.uid
+        && incomingReviewClubId() == clubDoc(incomingReviewClubId()).clubId
+        && clubDoc(incomingReviewClubId()).storyCloseStatus == 'collecting'
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && reviewId == incomingReviewClubId() + '_' + request.auth.uid;
+      allow delete: if isSignedIn() && isClubCreator(reviewClubId());
+    }
+
     match /weeks/{weekId} {
       allow read: if isSignedIn() && isMember(resource.data.clubId);
       allow create: if isSignedIn()

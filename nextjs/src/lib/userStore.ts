@@ -28,6 +28,21 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
+export async function getUserProfiles(uids: string[]): Promise<Record<string, UserProfile>> {
+  const unique = [...new Set(uids)];
+  const entries = await Promise.all(
+    unique.map(async (uid) => {
+      const profile = await getUserProfile(uid);
+      return [uid, profile] as const;
+    })
+  );
+  const out: Record<string, UserProfile> = {};
+  for (const [uid, profile] of entries) {
+    if (profile) out[uid] = profile;
+  }
+  return out;
+}
+
 export async function saveUserProfile(
   uid: string,
   updates: Pick<UserProfile, "displayName" | "photoURL" | "aboutMe">

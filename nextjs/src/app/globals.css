@@ -269,6 +269,90 @@ a {
   color: var(--primary);
 }
 
+.statusBadge--reading {
+  background: rgba(76, 175, 80, 0.15);
+  color: #2e7d32;
+}
+
+.statusBadge--queued {
+  background: rgba(255, 152, 0, 0.15);
+  color: #e65100;
+}
+
+.statusBadge--library {
+  background: rgba(91, 100, 117, 0.12);
+  color: var(--muted);
+}
+
+.exploreBookList {
+  display: grid;
+  gap: 10px;
+}
+
+.exploreBookCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  transition: border-color 0.15s ease;
+}
+
+.exploreBookCard:hover {
+  border-color: rgba(15, 76, 117, 0.35);
+}
+
+.exploreBookCardMain {
+  display: grid;
+  gap: 4px;
+}
+
+.exploreBookCardTitle {
+  font-size: 17px;
+}
+
+.exploreBookCardAuthor {
+  font-size: 14px;
+}
+
+.exploreClubList,
+.exploreReviewList {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.exploreClubRow,
+.exploreReviewRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.exploreClubRowMain,
+.exploreReviewRowMain {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.exploreReviewSnippet {
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.exploreReviewRowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .weekRow {
   display: flex;
   align-items: center;
@@ -354,6 +438,321 @@ textarea.inputField {
 
 .joinRequestsPanel {
   border-color: rgba(15, 76, 117, 0.25);
+}
+
+.clubHomeStack {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.clubBookHero {
+  text-align: center;
+  padding: 24px 18px;
+}
+
+.clubBookHeroLabel {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.clubBookHeroTitle {
+  font-size: clamp(24px, 5vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.clubBookHeroAuthor {
+  font-size: 16px;
+}
+
+.clubNextReadBlock {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.clubNextReadTitle {
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.clubNextReadDate {
+  font-size: 14px;
+}
+
+.clubNewReadBanner {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: rgba(15, 76, 117, 0.08);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.clubLeaderReview {
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.clubBooksReadSection {
+  padding: 18px;
+}
+
+.clubBooksReadList {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.clubBooksReadItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.clubBooksReadItem:hover {
+  border-color: rgba(15, 76, 117, 0.35);
+  background: rgba(15, 76, 117, 0.04);
+}
+
+.clubBooksReadItemMain {
+  font-size: 16px;
+}
+
+.clubBooksReadItemMeta {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.clubStatsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clubStatChip {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.clubStatChip--id {
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  font-size: 13px;
+}
+
+.clubStatChip--clickable {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.clubStatChip--clickable:hover {
+  background: rgba(15, 76, 117, 0.08);
+  border-color: rgba(15, 76, 117, 0.3);
+}
+
+.clubStatsBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.statPopover {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.clubHomeDiscussion {
+  display: flex;
+  flex-direction: column;
+  min-height: min(70vh, 560px);
+  padding: 0;
+  overflow: hidden;
+}
+
+.clubWeekToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.clubWeekSelectWrap {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: min(100%, 220px);
+}
+
+.clubWeekSelectLabel {
+  font-size: 13px;
+}
+
+.clubWeekSelect {
+  padding: 10px 12px;
+}
+
+.clubWeekToolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.clubHomeDiscussionBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 18px 18px;
+}
+
+.clubHomeBoard {
+  flex: 1;
+  min-height: 200px;
+  max-height: 360px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 10px;
+}
+
+.clubHomeCompose {
+  flex-shrink: 0;
+}
+
+.clubRoomLocked--embedded {
+  min-height: 200px;
+}
+
+.myClubsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.myClubsListItem {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.myClubsListItem:hover {
+  border-color: rgba(15, 76, 117, 0.35);
+}
+
+.collapsiblePanelHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.collapsiblePanelBody {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.memberList {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.clubRoomLayout {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 120px);
+  gap: 10px;
+  margin-top: 0;
+}
+
+.clubRoomStrip {
+  flex-shrink: 0;
+}
+
+.clubRoomStripTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.clubRoomClubName {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.clubRoomBookLine {
+  font-size: 14px;
+}
+
+.clubRoomWeekLabel {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.clubRoomBoard {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.clubRoomCompose {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.clubRoomLocked {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (min-width: 540px) {

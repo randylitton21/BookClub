@@ -30,6 +30,9 @@ export default function AppLayout({
             <Link href="/app" className="navLink">
               Clubs
             </Link>
+            <Link href="/app/explore" className="navLink">
+              Browse
+            </Link>
             <Link href="/app/profile" className="navLink">
               Profile
             </Link>

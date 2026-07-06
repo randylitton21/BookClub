@@ -83,7 +83,7 @@ export default function QuizPage() {
       if (result.passed) {
         setResultText(`You passed with ${score}%! Opening discussion...`);
         setTimeout(() => {
-          router.push(`/app/clubs/${clubId}/weeks/${weekId}/discussion`);
+          router.push(`/app/clubs/${clubId}/room/${weekId}`);
         }, 800);
       } else {
         setResultText(`Score: ${score}%. You need ${result.passThreshold}% to pass. Try again.`);
