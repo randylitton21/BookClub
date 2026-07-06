@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BookCover from "../../../_components/BookCover";
 import { formatClosedAtDate } from "@/lib/readStore";
 import type { ClosedRead } from "@/lib/types";
 
@@ -13,13 +14,13 @@ export default function ClubBooksReadSection({
 }) {
   return (
     <div className="card clubBooksReadSection">
-      <h2 style={{ marginBottom: 8, fontSize: 18 }}>Books we&apos;ve read</h2>
+      <h2 className="sectionHeading">Books we&apos;ve read</h2>
       {loadError ? (
-        <div className="card" style={{ borderColor: "rgba(244,67,54,.4)" }}>
-          {loadError}
-        </div>
+        <div className="alertError">{loadError}</div>
       ) : closedReads.length === 0 ? (
-        <p className="muted">No finished reads yet. When the leader closes a book, it will appear here.</p>
+        <p className="emptyStateInline muted">
+          No finished reads yet. When the leader closes a book, it will appear here.
+        </p>
       ) : (
         <ul className="clubBooksReadList">
           {closedReads.map((read) => (
@@ -28,6 +29,7 @@ export default function ClubBooksReadSection({
                 href={`/app/clubs/${clubId}/reads/${read.readId}`}
                 className="clubBooksReadItem"
               >
+                <BookCover title={read.title} size="sm" />
                 <span className="clubBooksReadItemMain">
                   <strong>{read.title}</strong>
                   <span className="muted"> by {read.author}</span>

@@ -85,6 +85,29 @@ export async function getStoryClose(clubId: string): Promise<StoryClose | null> 
   return snap.data() as StoryClose;
 }
 
+export async function getStoryCloseReviewForMember(
+  clubId: string,
+  uid: string
+): Promise<{ text: string; displayName: string; updatedAt: unknown } | null> {
+  if (!firestore) return null;
+  try {
+    const snap = await getDoc(
+      doc(firestore, "storyCloseReviews", storyReviewDocId(clubId, uid))
+    );
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return {
+      text: data.text as string,
+      displayName: data.displayName as string,
+      updatedAt: data.updatedAt,
+    };
+  } catch (e) {
+    const code = e && typeof e === "object" && "code" in e ? String((e as { code: string }).code) : "";
+    if (code === "permission-denied") return null;
+    throw e;
+  }
+}
+
 export async function listStoryCloseReviews(clubId: string): Promise<
   { uid: string; displayName: string; text: string }[]
 > {

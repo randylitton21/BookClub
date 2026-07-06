@@ -12,8 +12,9 @@ import {
 import type { Book, BookClubLink } from "@/lib/types";
 import { BROWSE_BOOKS_RETURN, hrefWithReturnNav } from "@/lib/returnNav";
 import PageTitleCard from "../../../_components/PageTitleCard";
+import BookCover from "../../../_components/BookCover";
 import ReturnNavButton from "../../_components/ReturnNavButton";
-import { BookStatusLabel } from "../_components/BookStatusBadge";
+import BookStatusBadge, { BookStatusLabel } from "../_components/BookStatusBadge";
 
 function formatExpectedDate(iso: string | null | undefined): string {
   if (!iso) return "Date TBD";
@@ -172,6 +173,20 @@ export default function ExploreBookDetailPage() {
         }
       />
 
+      <div className="card exploreBookDetailHero">
+        <BookCover title={book.title} size="lg" />
+        <div>
+          <BookStatusBadge book={book} />
+          <p className="muted" style={{ marginTop: 10, fontSize: 14 }}>
+            {book.readingCount > 0 && `${book.readingCount} club${book.readingCount === 1 ? "" : "s"} reading`}
+            {book.readingCount > 0 && book.queuedCount > 0 && " · "}
+            {book.queuedCount > 0 && `${book.queuedCount} queued`}
+            {(book.readingCount > 0 || book.queuedCount > 0) && book.finishedCount > 0 && " · "}
+            {book.finishedCount > 0 && `${book.finishedCount} finished`}
+          </p>
+        </div>
+      </div>
+
       <div className="clubHomeStack">
         {!hasJoinable && !hasReviews && (
           <div className="card">
@@ -188,8 +203,10 @@ export default function ExploreBookDetailPage() {
         )}
 
         {queued.length > 0 && (
-          <section className="card">
-            <h2 style={{ marginBottom: 12, fontSize: 18 }}>Queued</h2>
+          <section className="card card--section">
+            <h2 className="fontDisplay sectionLabel" style={{ marginBottom: 4, fontSize: "1.1rem", textTransform: "none", letterSpacing: "-0.01em" }}>
+              Queued
+            </h2>
             <p className="muted" style={{ marginBottom: 12, fontSize: 14 }}>
               These clubs have this book up next — a good time to join.
             </p>
@@ -207,8 +224,10 @@ export default function ExploreBookDetailPage() {
         )}
 
         {reading.length > 0 && (
-          <section className="card">
-            <h2 style={{ marginBottom: 12, fontSize: 18 }}>Reading now</h2>
+          <section className="card card--section">
+            <h2 className="fontDisplay" style={{ marginBottom: 12, fontSize: "1.1rem" }}>
+              Reading now
+            </h2>
             <ul className="exploreClubList">
               {reading.map((link) => (
                 <ClubJoinRow
@@ -224,7 +243,9 @@ export default function ExploreBookDetailPage() {
 
         {hasReviews && (
           <section className="card">
-            <h2 style={{ marginBottom: 12, fontSize: 18 }}>Club reviews</h2>
+            <h2 className="fontDisplay" style={{ marginBottom: 12, fontSize: "1.1rem" }}>
+              Club reviews
+            </h2>
             <p className="muted" style={{ marginBottom: 12, fontSize: 14 }}>
               Leader reviews from clubs that finished this book — read the full review or visit the
               club.
@@ -243,11 +264,7 @@ export default function ExploreBookDetailPage() {
         )}
       </div>
 
-      {error && (
-        <div className="card" style={{ marginTop: 14, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="alertError" style={{ marginTop: 14 }}>{error}</div>}
     </>
   );
 }

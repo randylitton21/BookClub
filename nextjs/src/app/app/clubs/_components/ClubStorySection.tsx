@@ -65,26 +65,29 @@ export default function ClubStorySection({
   }
 
   return (
-    <div className="card clubStorySection">
-      <h2 style={{ marginBottom: 6, fontSize: 18 }}>Close the Story</h2>
+    <div className={`card clubStorySection${collecting ? " clubStorySection--active" : ""}`}>
+      <h2 className="sectionHeading">Close the Story</h2>
 
       {collecting ? (
         <>
-          <p className="muted" style={{ marginBottom: 12 }}>
-            The club is closing <strong>{club.bookTitle}</strong>. Share a short paragraph
-            about your reading experience.
+          <p className="sectionHint muted">
+            The club is closing <strong>{club.bookTitle}</strong>. Share a short paragraph about
+            your reading experience.
           </p>
           {isCreator ? (
-            <p className="muted" style={{ marginBottom: 12 }}>
+            <p className="muted" style={{ marginBottom: 14 }}>
               {memberReviewCount} member review{memberReviewCount === 1 ? "" : "s"} submitted.
-              Finish and publish the final review in{" "}
-              <Link href={`/app/clubs/${club.clubId}/manage`}>Manage</Link>.
+              Finish and publish in{" "}
+              <Link href={`/app/clubs/${club.clubId}/manage`} style={{ fontWeight: 700 }}>
+                Manage club
+              </Link>
+              .
             </p>
           ) : myReviewSubmitted ? (
-            <p className="muted">Thanks — your review is in. The leader will publish the final story.</p>
+            <p className="alertSuccess">Thanks — your review is in. The leader will publish the final story.</p>
           ) : (
             <>
-              <label style={{ display: "grid", gap: 6 }}>
+              <label className="formLabel">
                 <span className="muted">Your short review</span>
                 <textarea
                   className="inputField"
@@ -96,20 +99,20 @@ export default function ClubStorySection({
               </label>
               <button
                 type="button"
-                className="btnPrimary"
+                className="btnAccent btnBlock"
                 style={{ marginTop: 10 }}
                 disabled={busy || !reviewText.trim()}
                 onClick={handleSubmitReview}
               >
-                {busy ? "Submitting..." : "Submit review"}
+                {busy ? "Submitting…" : "Submit review"}
               </button>
             </>
           )}
         </>
       ) : (
-        <p className="muted">
-          When the club finishes a book, the leader closes the story — members share short
-          reviews, then the leader publishes the final piece. Finished books appear in{" "}
+        <p className="sectionHint muted">
+          When the club finishes a book, the leader closes the story — members share short reviews,
+          then the leader publishes the final piece. Finished books appear in{" "}
           <strong>Books we&apos;ve read</strong> above.
         </p>
       )}
@@ -118,18 +121,14 @@ export default function ClubStorySection({
         <Link
           href={`/app/clubs/${club.clubId}/manage`}
           className="btnSecondary"
-          style={{ marginTop: 12, display: "inline-block" }}
+          style={{ marginTop: 14, display: "inline-flex" }}
         >
           Queue next read or close this book
         </Link>
       )}
 
-      {message && <p className="muted" style={{ marginTop: 10 }}>{message}</p>}
-      {error && (
-        <div className="card" style={{ marginTop: 10, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
+      {message && <p className="alertSuccess" style={{ marginTop: 12 }}>{message}</p>}
+      {error && <div className="alertError" style={{ marginTop: 12 }}>{error}</div>}
     </div>
   );
 }

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatClosedAtDate } from "@/lib/readStore";
+import { hrefWithReturnNav } from "@/lib/returnNav";
 import type { Club, ClosedRead, UserProfile } from "@/lib/types";
+import ReaderProfileLink from "../../_components/ReaderProfileLink";
 
 type Popover = "members" | "books" | null;
 
@@ -20,6 +22,8 @@ export default function ClubStatsRow({
   const memberCount = club.memberUids.length;
   const hasActive = Boolean(club.bookTitle?.trim());
   const booksRead = closedReads.length + (hasActive ? 1 : 0);
+  const clubReturnTo = `/app/clubs/${club.clubId}`;
+  const clubReturnLabel = club.name;
 
   function toggle(which: Popover) {
     setOpen((prev) => (prev === which ? null : which));
@@ -51,11 +55,18 @@ export default function ClubStatsRow({
       {open === "members" && (
         <ul className="statPopover memberList">
           {club.memberUids.map((uid) => {
-            const name = profiles[uid]?.displayName || "Reader";
+            const profile = profiles[uid];
+            const name = profile?.displayName || "Reader";
             const isCreator = uid === club.createdBy;
             return (
               <li key={uid}>
-                <strong>{name}</strong>
+                <ReaderProfileLink
+                  uid={uid}
+                  returnTo={clubReturnTo}
+                  returnLabel={clubReturnLabel}
+                >
+                  <strong>{name}</strong>
+                </ReaderProfileLink>
                 {isCreator && <span className="muted"> — Club leader</span>}
               </li>
             );
@@ -76,7 +87,13 @@ export default function ClubStatsRow({
           )}
           {closedReads.map((read) => (
             <li key={read.readId}>
-              <Link href={`/app/clubs/${club.clubId}/reads/${read.readId}`}>
+              <Link
+                href={hrefWithReturnNav(
+                  `/app/clubs/${club.clubId}/reads/${read.readId}`,
+                  clubReturnTo,
+                  clubReturnLabel
+                )}
+              >
                 <strong>{read.title}</strong>
                 <span className="muted"> — {read.author}</span>
                 <span className="muted" style={{ marginLeft: 8, fontSize: 13 }}>

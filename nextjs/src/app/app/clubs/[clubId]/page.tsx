@@ -131,9 +131,11 @@ export default function ClubHomePage() {
     return (
       <div className="card">
         <p>{error || "Club not found."}</p>
-        <Link href="/app" className="btnSecondary" style={{ marginTop: 12, display: "inline-block" }}>
-          Back to clubs
-        </Link>
+        <div className="pageActionsRow">
+          <Link href="/app" className="btnSecondary">
+            Back to clubs
+          </Link>
+        </div>
       </div>
     );
   }
@@ -220,21 +222,19 @@ export default function ClubHomePage() {
             busy={busy}
             onApprove={handleApprove}
             onReject={handleReject}
+            clubId={club.clubId}
+            clubName={club.name}
           />
         )}
 
         {isCreator && (
-          <Link href={`/app/clubs/${club.clubId}/manage`} className="btnSecondary" style={{ textAlign: "center" }}>
+          <Link href={`/app/clubs/${club.clubId}/manage`} className="btnSecondary btnBlock">
             Manage club
           </Link>
         )}
       </div>
 
-      {error && (
-        <div className="card" style={{ marginTop: 14, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="alertError" style={{ marginTop: 14 }}>{error}</div>}
     </>
   );
 }

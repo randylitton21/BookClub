@@ -222,15 +222,17 @@ export default function ClubManagePage() {
   const hasQueuedNext = Boolean(club?.nextRead?.title);
   const hasActiveBook = Boolean(club?.bookTitle?.trim());
 
-  if (loading) return <p className="muted">Loading...</p>;
+  if (loading) return <p className="muted">Loading…</p>;
 
   if (!club) {
     return (
       <div className="card">
         <p>{error || "Club not found."}</p>
-        <Link href="/app" className="btnSecondary" style={{ marginTop: 12, display: "inline-block" }}>
-          Back to clubs
-        </Link>
+        <div className="pageActionsRow">
+          <Link href="/app" className="btnSecondary">
+            Back to clubs
+          </Link>
+        </div>
       </div>
     );
   }
@@ -241,317 +243,323 @@ export default function ClubManagePage() {
         title="Manage club"
         subtitle={club.name}
         actions={
-          <Link href={`/app/clubs/${club.clubId}`} className="btnSecondary">
-            Back to club
+          <Link href={`/app/clubs/${club.clubId}`} className="btnGhost btnSmall">
+            ← Back to club
           </Link>
         }
       />
 
-      <div className="card" style={{ marginTop: 14 }}>
-        <p className="muted">
-          As club leader, closing the story for each book is your duty — members share short
-          reviews, then you publish the final piece with the book title.
-        </p>
-      </div>
-
-      {hasActiveBook && !collecting && (
-        <div className="card" style={{ marginTop: 14 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Next read</h2>
-          <p className="muted" style={{ marginBottom: 12 }}>
-            Queue one book at a time. It starts automatically when you publish Close the Story.
-            Expected start date is shown on the club homepage.
+      <div className="managePageStack">
+        <div className="card manageSection card--section">
+          <p className="muted">
+            As club leader, closing the story for each book is your duty — members share short
+            reviews, then you publish the final piece with the book title.
           </p>
-          {hasQueuedNext ? (
-            <>
-              <p>
-                <strong>{club.nextRead!.title}</strong>
-                <span className="muted"> by {club.nextRead!.author}</span>
-              </p>
-              {club.nextRead!.expectedStartDate && (
-                <p className="muted">Expected start: {club.nextRead!.expectedStartDate}</p>
-              )}
-              <button
-                type="button"
-                className="btnSecondary btnSmall"
-                style={{ marginTop: 10 }}
-                disabled={busy}
-                onClick={handleClearNextRead}
-              >
-                Clear next read
-              </button>
-            </>
-          ) : (
+        </div>
+
+        {hasActiveBook && !collecting && (
+          <div className="card manageSection">
+            <h2 className="sectionHeading">Next read</h2>
+            <p className="sectionHint muted">
+              Queue one book at a time. It starts automatically when you publish Close the Story.
+              Expected start date is shown on the club homepage.
+            </p>
+            {hasQueuedNext ? (
+              <>
+                <p>
+                  <strong>{club.nextRead!.title}</strong>
+                  <span className="muted"> by {club.nextRead!.author}</span>
+                </p>
+                {club.nextRead!.expectedStartDate && (
+                  <p className="muted">Expected start: {club.nextRead!.expectedStartDate}</p>
+                )}
+                <button
+                  type="button"
+                  className="btnGhost btnSmall"
+                  style={{ marginTop: 12 }}
+                  disabled={busy}
+                  onClick={handleClearNextRead}
+                >
+                  Clear next read
+                </button>
+              </>
+            ) : (
+              <div className="formGrid">
+                <label className="formLabel">
+                  <span className="muted">Book title</span>
+                  <input
+                    className="inputField"
+                    value={nextTitle}
+                    onChange={(e) => setNextTitle(e.target.value)}
+                    placeholder="Next book title"
+                  />
+                </label>
+                <label className="formLabel">
+                  <span className="muted">Author</span>
+                  <input
+                    className="inputField"
+                    value={nextAuthor}
+                    onChange={(e) => setNextAuthor(e.target.value)}
+                    placeholder="Author name"
+                  />
+                </label>
+                <label className="formLabel">
+                  <span className="muted">Expected start date (optional)</span>
+                  <input
+                    type="date"
+                    className="inputField"
+                    value={nextExpectedDate}
+                    onChange={(e) => setNextExpectedDate(e.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btnPrimary btnBlock"
+                  disabled={busy || !nextTitle.trim() || !nextAuthor.trim()}
+                  onClick={handleSaveNextRead}
+                >
+                  Save next read
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {hasActiveBook && (
+          <div className={`card manageSection${collecting ? " clubStorySection--active" : ""}`}>
+            <h2 className="sectionHeading">Close the Story</h2>
+            {collecting ? (
+              <>
+                <p className="sectionHint muted">
+                  Closing <strong>{club.bookTitle}</strong>. Member reviews ({closeReviews.length}):
+                </p>
+                {closeReviews.length === 0 ? (
+                  <p className="emptyStateInline muted">No member reviews yet.</p>
+                ) : (
+                  <ul className="memberList" style={{ marginBottom: 14 }}>
+                    {closeReviews.map((r) => (
+                      <li key={r.uid} className="memberReviewCard">
+                        <strong>{r.displayName}</strong>
+                        <p style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{r.text}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <label className="formLabel">
+                  <span className="muted">Your final review (publishes with book title)</span>
+                  <textarea
+                    className="inputField"
+                    rows={6}
+                    value={leaderFinalReview}
+                    onChange={(e) => setLeaderFinalReview(e.target.value)}
+                    placeholder="Tie the club's experience together…"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btnAccent btnBlock"
+                  style={{ marginTop: 12 }}
+                  disabled={busy || !leaderFinalReview.trim()}
+                  onClick={handlePublishClose}
+                >
+                  {busy ? "Publishing…" : "Publish and start next read"}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="sectionHint muted">
+                  Current book: <strong>{club.bookTitle}</strong> by {club.bookAuthor}
+                  {!hasQueuedNext && (
+                    <span> — queue a next read first if you want a seamless handoff.</span>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className="btnAccent"
+                  disabled={busy}
+                  onClick={handleBeginClose}
+                >
+                  Begin Close the Story
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {!hasActiveBook && (
+          <div className="card manageSection">
+            <h2 className="sectionHeading">Start a read</h2>
+            <p className="sectionHint muted">
+              No active book. Add the club&apos;s current read below.
+            </p>
             <div className="formGrid">
-              <label style={{ display: "grid", gap: 6 }}>
+              <label className="formLabel">
                 <span className="muted">Book title</span>
                 <input
                   className="inputField"
                   value={nextTitle}
                   onChange={(e) => setNextTitle(e.target.value)}
-                  placeholder="Next book title"
                 />
               </label>
-              <label style={{ display: "grid", gap: 6 }}>
+              <label className="formLabel">
                 <span className="muted">Author</span>
                 <input
                   className="inputField"
                   value={nextAuthor}
                   onChange={(e) => setNextAuthor(e.target.value)}
-                  placeholder="Author name"
-                />
-              </label>
-              <label style={{ display: "grid", gap: 6 }}>
-                <span className="muted">Expected start date (optional)</span>
-                <input
-                  type="date"
-                  className="inputField"
-                  value={nextExpectedDate}
-                  onChange={(e) => setNextExpectedDate(e.target.value)}
                 />
               </label>
               <button
                 type="button"
-                className="btnPrimary"
+                className="btnPrimary btnBlock"
                 disabled={busy || !nextTitle.trim() || !nextAuthor.trim()}
-                onClick={handleSaveNextRead}
+                onClick={handleStartActiveRead}
               >
-                Save next read
+                Start this read
               </button>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {hasActiveBook && (
-        <div className="card" style={{ marginTop: 14 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Close the Story</h2>
-          {collecting ? (
-            <>
-              <p className="muted" style={{ marginBottom: 12 }}>
-                Closing <strong>{club.bookTitle}</strong>. Member reviews ({closeReviews.length}):
-              </p>
-              {closeReviews.length === 0 ? (
-                <p className="muted">No member reviews yet.</p>
-              ) : (
-                <ul className="memberList" style={{ marginBottom: 12 }}>
-                  {closeReviews.map((r) => (
-                    <li key={r.uid} className="card" style={{ marginBottom: 8 }}>
-                      <strong>{r.displayName}</strong>
-                      <p style={{ marginTop: 6, whiteSpace: "pre-wrap" }}>{r.text}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <label style={{ display: "grid", gap: 6 }}>
-                <span className="muted">Your final review (publishes with book title)</span>
-                <textarea
+        {hasActiveBook && !collecting && (
+          <div className="card manageSection">
+            <h2 className="sectionHeading">Weeks &amp; quizzes</h2>
+            <div className="formGrid">
+              <label className="formLabel">
+                <span className="muted">New reading week</span>
+                <input
                   className="inputField"
-                  rows={6}
-                  value={leaderFinalReview}
-                  onChange={(e) => setLeaderFinalReview(e.target.value)}
-                  placeholder="Tie the club's experience together..."
+                  value={weekLabel}
+                  onChange={(e) => setWeekLabel(e.target.value)}
+                  placeholder='e.g. "Chapters 1–4"'
                 />
               </label>
               <button
                 type="button"
                 className="btnPrimary"
-                style={{ marginTop: 10 }}
-                disabled={busy || !leaderFinalReview.trim()}
-                onClick={handlePublishClose}
+                disabled={busy || !weekLabel.trim()}
+                onClick={handleAddWeek}
               >
-                {busy ? "Publishing..." : "Publish and start next read"}
+                Add week
               </button>
-            </>
-          ) : (
-            <>
-              <p className="muted" style={{ marginBottom: 12 }}>
-                Current book: <strong>{club.bookTitle}</strong> by {club.bookAuthor}
-                {!hasQueuedNext && (
-                  <span> — queue a next read first if you want a seamless handoff.</span>
-                )}
-              </p>
-              <button
-                type="button"
-                className="btnPrimary"
-                disabled={busy}
-                onClick={handleBeginClose}
-              >
-                Begin Close the Story
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {!hasActiveBook && (
-        <div className="card" style={{ marginTop: 14 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Start a read</h2>
-          <p className="muted" style={{ marginBottom: 12 }}>
-            No active book. Add the club&apos;s current read below.
-          </p>
-          <div className="formGrid">
-            <label style={{ display: "grid", gap: 6 }}>
-              <span className="muted">Book title</span>
-              <input
-                className="inputField"
-                value={nextTitle}
-                onChange={(e) => setNextTitle(e.target.value)}
-              />
-            </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span className="muted">Author</span>
-              <input
-                className="inputField"
-                value={nextAuthor}
-                onChange={(e) => setNextAuthor(e.target.value)}
-              />
-            </label>
-            <button
-              type="button"
-              className="btnPrimary"
-              disabled={busy || !nextTitle.trim() || !nextAuthor.trim()}
-              onClick={handleStartActiveRead}
-            >
-              Start this read
-            </button>
-          </div>
-        </div>
-      )}
-
-      {hasActiveBook && !collecting && (
-      <div className="card" style={{ marginTop: 14 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 10 }}>Weeks & quizzes</h2>
-        <div className="formGrid">
-          <label style={{ display: "grid", gap: 6 }}>
-            <span className="muted">New reading week</span>
-            <input
-              className="inputField"
-              value={weekLabel}
-              onChange={(e) => setWeekLabel(e.target.value)}
-              placeholder='e.g. "Chapters 1–4"'
-            />
-          </label>
-          <button
-            type="button"
-            className="btnPrimary"
-            disabled={busy || !weekLabel.trim()}
-            onClick={handleAddWeek}
-          >
-            Add week
-          </button>
-        </div>
-
-        {weeks.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <h3 style={{ marginBottom: 10 }}>Edit quiz for a week</h3>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {weeks.map((week) => (
-                <button
-                  key={week.weekId}
-                  type="button"
-                  className={setupWeekId === week.weekId ? "btnPrimary btnSmall" : "btnSecondary btnSmall"}
-                  onClick={() => {
-                    setSetupWeekId(week.weekId);
-                    setQuestions([emptyQuestion()]);
-                  }}
-                >
-                  {week.label}
-                </button>
-              ))}
             </div>
-          </div>
-        )}
 
-        {setupWeekId && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-            <h3 style={{ marginBottom: 10 }}>
-              Quiz for {weeks.find((w) => w.weekId === setupWeekId)?.label}
-            </h3>
-            {questions.map((q, qi) => (
-              <div key={qi} className="card" style={{ marginBottom: 10 }}>
-                <label style={{ display: "grid", gap: 6, marginBottom: 8 }}>
-                  <span className="muted">Question {qi + 1}</span>
-                  <input
-                    className="inputField"
-                    value={q.questionText}
-                    onChange={(e) => {
-                      const next = [...questions];
-                      next[qi] = { ...next[qi], questionText: e.target.value };
-                      setQuestions(next);
-                    }}
-                  />
-                </label>
-                {q.choices.map((choice, ci) => (
-                  <label key={ci} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                    <input
-                      type="radio"
-                      name={`correct-${qi}`}
-                      checked={q.correctIndex === ci}
-                      onChange={() => {
-                        const next = [...questions];
-                        next[qi] = { ...next[qi], correctIndex: ci };
-                        setQuestions(next);
+            {weeks.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <p className="sectionLabel">Edit quiz for a week</p>
+                <div className="weekPickerRow">
+                  {weeks.map((week) => (
+                    <button
+                      key={week.weekId}
+                      type="button"
+                      className={
+                        setupWeekId === week.weekId ? "btnPrimary btnSmall" : "btnSecondary btnSmall"
+                      }
+                      onClick={() => {
+                        setSetupWeekId(week.weekId);
+                        setQuestions([emptyQuestion()]);
                       }}
-                    />
-                    <input
-                      className="inputField"
-                      value={choice}
-                      placeholder={`Choice ${ci + 1}`}
-                      onChange={(e) => {
-                        const next = [...questions];
-                        const choices = [...next[qi].choices];
-                        choices[ci] = e.target.value;
-                        next[qi] = { ...next[qi], choices };
-                        setQuestions(next);
-                      }}
-                    />
-                  </label>
-                ))}
-                <button
-                  type="button"
-                  className="btnSecondary btnSmall"
-                  onClick={() => {
-                    const next = [...questions];
-                    next[qi] = { ...next[qi], choices: [...next[qi].choices, ""] };
-                    setQuestions(next);
-                  }}
-                >
-                  Add choice
-                </button>
+                    >
+                      {week.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                className="btnSecondary btnSmall"
-                onClick={() => setQuestions([...questions, emptyQuestion()])}
-              >
-                Add question
-              </button>
-              <button type="button" className="btnPrimary btnSmall" disabled={busy} onClick={handleSaveQuiz}>
-                Save quiz
-              </button>
-              <button
-                type="button"
-                className="btnSecondary btnSmall"
-                onClick={() => {
-                  setSetupWeekId(null);
-                  setQuestions([emptyQuestion()]);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+            )}
+
+            {setupWeekId && (
+              <div className="quizEditorBlock">
+                <h3 className="sectionHeading" style={{ fontSize: "1rem" }}>
+                  Quiz for {weeks.find((w) => w.weekId === setupWeekId)?.label}
+                </h3>
+                {questions.map((q, qi) => (
+                  <div key={qi} className="card quizEditorQuestion">
+                    <label className="formLabel" style={{ marginBottom: 10 }}>
+                      <span className="muted">Question {qi + 1}</span>
+                      <input
+                        className="inputField"
+                        value={q.questionText}
+                        onChange={(e) => {
+                          const next = [...questions];
+                          next[qi] = { ...next[qi], questionText: e.target.value };
+                          setQuestions(next);
+                        }}
+                      />
+                    </label>
+                    {q.choices.map((choice, ci) => (
+                      <div key={ci} className="choiceEditorRow">
+                        <input
+                          type="radio"
+                          name={`correct-${qi}`}
+                          checked={q.correctIndex === ci}
+                          onChange={() => {
+                            const next = [...questions];
+                            next[qi] = { ...next[qi], correctIndex: ci };
+                            setQuestions(next);
+                          }}
+                          aria-label={`Mark choice ${ci + 1} as correct`}
+                        />
+                        <input
+                          className="inputField"
+                          value={choice}
+                          placeholder={`Choice ${ci + 1}`}
+                          onChange={(e) => {
+                            const next = [...questions];
+                            const choices = [...next[qi].choices];
+                            choices[ci] = e.target.value;
+                            next[qi] = { ...next[qi], choices };
+                            setQuestions(next);
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="btnGhost btnSmall"
+                      onClick={() => {
+                        const next = [...questions];
+                        next[qi] = { ...next[qi], choices: [...next[qi].choices, ""] };
+                        setQuestions(next);
+                      }}
+                    >
+                      Add choice
+                    </button>
+                  </div>
+                ))}
+                <div className="pageActionsRow">
+                  <button
+                    type="button"
+                    className="btnSecondary btnSmall"
+                    onClick={() => setQuestions([...questions, emptyQuestion()])}
+                  >
+                    Add question
+                  </button>
+                  <button
+                    type="button"
+                    className="btnPrimary btnSmall"
+                    disabled={busy}
+                    onClick={handleSaveQuiz}
+                  >
+                    Save quiz
+                  </button>
+                  <button
+                    type="button"
+                    className="btnGhost btnSmall"
+                    onClick={() => {
+                      setSetupWeekId(null);
+                      setQuestions([emptyQuestion()]);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </div>
-      )}
 
-      {error && (
-        <div className="card" style={{ marginTop: 14, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
+        {error && <div className="alertError">{error}</div>}
+      </div>
     </>
   );
 }

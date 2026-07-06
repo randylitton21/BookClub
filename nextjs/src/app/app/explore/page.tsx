@@ -53,11 +53,8 @@ export default function ExplorePage() {
           {rebuilding ? "Building book catalog…" : "Loading…"}
         </p>
       ) : books.length === 0 ? (
-        <div className="card" style={{ marginTop: 14 }}>
-          <p className="muted" style={{ marginBottom: 12 }}>
-            No books in the catalog yet. The list updates when clubs start, queue, or close a
-            book. If something looks missing, use Rebuild catalog below.
-          </p>
+        <div className="card card--section">
+          <p className="emptyStateInline muted">No books in the catalog yet. The list updates when clubs start, queue, or close a book. If something looks missing, use Rebuild catalog below.</p>
           <button type="button" className="btnSecondary" disabled={rebuilding} onClick={handleRebuild}>
             Rebuild catalog
           </button>
@@ -84,11 +81,7 @@ export default function ExplorePage() {
         </p>
       )}
 
-      {error && (
-        <div className="card" style={{ marginTop: 14, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="alertError" style={{ marginTop: 14 }}>{error}</div>}
     </>
   );
 }

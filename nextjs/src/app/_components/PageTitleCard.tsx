@@ -2,32 +2,22 @@ export default function PageTitleCard({
   title,
   subtitle,
   actions,
+  variant = "default",
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
+  variant?: "default" | "hero";
 }) {
   return (
-    <div className="card" style={{ marginTop: 14 }}>
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <h1 style={{ marginBottom: 2 }}>{title}</h1>
-          {subtitle != null && <div className="muted">{subtitle}</div>}
+    <header className={`pageHeader${variant === "hero" ? " pageHeader--hero" : ""}`}>
+      <div className="pageHeaderInner">
+        <div className="pageHeaderText">
+          <h1 className="pageHeaderTitle">{title}</h1>
+          {subtitle != null && <p className="pageHeaderSubtitle muted">{subtitle}</p>}
         </div>
-        {actions != null && (
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {actions}
-          </div>
-        )}
+        {actions != null && <div className="pageHeaderActions">{actions}</div>}
       </div>
-    </div>
+    </header>
   );
 }

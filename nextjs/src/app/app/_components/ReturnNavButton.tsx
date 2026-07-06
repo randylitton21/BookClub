@@ -18,8 +18,8 @@ function ReturnNavButtonInner({
   const label = nav?.returnLabel ?? fallbackLabel;
 
   return (
-    <Link href={href} className="btnSecondary">
-      Back to {label}
+    <Link href={href} className="btnGhost btnSmall">
+      ← Back to {label}
     </Link>
   );
 }

@@ -47,7 +47,7 @@ export default function NonMemberClubView({
   }
 
   return (
-    <div className="formGrid" style={{ marginTop: 14 }}>
+    <div className="clubHomeStack">
       <ClubBookHero club={club} />
       <ClubStatsRow club={club} closedReads={closedReads} />
       <ClubBooksReadSection
@@ -55,29 +55,32 @@ export default function NonMemberClubView({
         closedReads={closedReads}
         loadError={closedReadsError}
       />
-      <p className="muted">Led by <strong>{creatorName}</strong></p>
-      <div className="card">
+      <p className="muted">
+        Led by <strong>{creatorName}</strong>
+      </p>
+      <div className="card card--accent">
         {userUid ? (
           <>
-            <p style={{ marginBottom: 12 }}>
-              You are not a member yet. Request to join and the club leader will approve you.
+            <p style={{ marginBottom: 14 }}>
+              You&apos;re not a member yet. Request to join and the club leader will approve you.
             </p>
-            <button type="button" className="btnPrimary" disabled={busy} onClick={handleRequestJoin}>
-              {busy ? "Sending..." : "Request to Join"}
+            <button
+              type="button"
+              className="btnAccent btnBlock"
+              disabled={busy}
+              onClick={handleRequestJoin}
+            >
+              {busy ? "Sending…" : "Request to join"}
             </button>
-            {message && <p className="muted" style={{ marginTop: 10 }}>{message}</p>}
-            {error && (
-              <div className="card" style={{ marginTop: 10, borderColor: "rgba(244,67,54,.4)" }}>
-                {error}
-              </div>
-            )}
+            {message && <p className="alertSuccess" style={{ marginTop: 12 }}>{message}</p>}
+            {error && <div className="alertError" style={{ marginTop: 12 }}>{error}</div>}
           </>
         ) : (
           <>
-            <p style={{ marginBottom: 12 }}>
+            <p style={{ marginBottom: 14 }}>
               Sign in to request to join this club. The leader must approve new members.
             </p>
-            <Link href="/app/login" className="btnPrimary" style={{ display: "inline-block" }}>
+            <Link href="/app/login" className="btnAccent btnBlock">
               Sign in to join
             </Link>
           </>

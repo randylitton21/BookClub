@@ -151,11 +151,14 @@ export default function ClubWeekDiscussionPanel({
           <p className="muted lockedPanel">Checking quiz status...</p>
         ) : !passed ? (
           <div className="lockedPanel">
+            <div className="lockedPanelIcon" aria-hidden>
+              🔒
+            </div>
             <p className="muted">Pass the quiz for this week to join the discussion.</p>
             <Link
               href={`/app/clubs/${club.clubId}/weeks/${selectedWeekId}/quiz`}
-              className="btnPrimary"
-              style={{ marginTop: 12, display: "inline-block" }}
+              className="btnAccent"
+              style={{ marginTop: 16, display: "inline-flex" }}
             >
               Take quiz
             </Link>
@@ -168,6 +171,8 @@ export default function ClubWeekDiscussionPanel({
             displayName={displayName}
             passed={passed}
             embedded
+            profileReturnTo={`/app/clubs/${club.clubId}`}
+            profileReturnLabel={club.name}
           />
         )}
       </div>

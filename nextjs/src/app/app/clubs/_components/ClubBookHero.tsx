@@ -1,4 +1,5 @@
 import type { Club } from "@/lib/types";
+import BookCover from "../../../_components/BookCover";
 
 function formatExpectedDate(iso: string | null | undefined): string {
   if (!iso) return "Date TBD";
@@ -30,31 +31,35 @@ export default function ClubBookHero({ club }: { club: Club }) {
         <p className="clubNewReadBanner">New read started: {club.bookTitle}</p>
       )}
 
-      {hasActiveBook ? (
-        <>
-          <p className="clubBookHeroLabel muted">Now reading</p>
-          <h2 className="clubBookHeroTitle">{club.bookTitle}</h2>
-          <p className="clubBookHeroAuthor muted">by {club.bookAuthor}</p>
-        </>
-      ) : (
-        <>
-          <p className="clubBookHeroLabel muted">Now reading</p>
-          <p className="muted">No active book — the club leader will set the next read.</p>
-        </>
-      )}
+      <div className="clubBookHeroInner">
+        {hasActiveBook && <BookCover title={club.bookTitle!} size="lg" />}
 
-      {next?.title && (
-        <div className="clubNextReadBlock">
-          <p className="clubBookHeroLabel muted">Coming next</p>
-          <p className="clubNextReadTitle">
-            <strong>{next.title}</strong>
-            <span className="muted"> by {next.author}</span>
-          </p>
-          <p className="muted clubNextReadDate">
-            Expected start: {formatExpectedDate(next.expectedStartDate)}
-          </p>
-        </div>
-      )}
+        {hasActiveBook ? (
+          <>
+            <p className="clubBookHeroLabel muted">Now reading</p>
+            <h2 className="clubBookHeroTitle">{club.bookTitle}</h2>
+            <p className="clubBookHeroAuthor muted">by {club.bookAuthor}</p>
+          </>
+        ) : (
+          <>
+            <p className="clubBookHeroLabel muted">Now reading</p>
+            <p className="muted">No active book — the club leader will set the next read.</p>
+          </>
+        )}
+
+        {next?.title && (
+          <div className="clubNextReadBlock">
+            <p className="clubBookHeroLabel muted">Coming next</p>
+            <p className="clubNextReadTitle">
+              <strong>{next.title}</strong>
+              <span className="muted"> by {next.author}</span>
+            </p>
+            <p className="muted clubNextReadDate">
+              Expected start: {formatExpectedDate(next.expectedStartDate)}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

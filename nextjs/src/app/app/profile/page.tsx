@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/authContext";
 import { getUserProfile, saveUserProfile } from "@/lib/userStore";
 import PageTitleCard from "../../_components/PageTitleCard";
+import ProfileAvatar from "../_components/ProfileAvatar";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -45,10 +47,33 @@ export default function ProfilePage() {
 
   return (
     <>
-      <PageTitleCard title="Profile" subtitle="Your name and photo show up in club discussions." />
-      <div className="card" style={{ marginTop: 14 }}>
+      <PageTitleCard
+        title="Edit profile"
+        subtitle="Your name and photo show up in club discussions."
+        actions={
+          user && (
+            <Link href={`/app/readers/${user.uid}`} className="btnSecondary btnSmall">
+              Preview reader page
+            </Link>
+          )
+        }
+      />
+      <div className="card">
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+          <ProfileAvatar
+            displayName={displayName}
+            photoURL={photoURL}
+            size="lg"
+          />
+          <div>
+            <div className="fontDisplay" style={{ fontSize: "1.2rem" }}>
+              {displayName || "Reader"}
+            </div>
+            <div className="muted" style={{ fontSize: 14 }}>{user?.email}</div>
+          </div>
+        </div>
         <div className="formGrid">
-          <label style={{ display: "grid", gap: 6 }}>
+          <label className="formLabel">
             <span className="muted">Display name</span>
             <input
               className="inputField"
@@ -57,7 +82,7 @@ export default function ProfilePage() {
               placeholder="How others see you"
             />
           </label>
-          <label style={{ display: "grid", gap: 6 }}>
+          <label className="formLabel">
             <span className="muted">Photo URL (optional)</span>
             <input
               className="inputField"
@@ -66,7 +91,7 @@ export default function ProfilePage() {
               placeholder="https://..."
             />
           </label>
-          <label style={{ display: "grid", gap: 6 }}>
+          <label className="formLabel">
             <span className="muted">About me (optional)</span>
             <textarea
               className="inputField"
@@ -75,19 +100,10 @@ export default function ProfilePage() {
               placeholder="A short intro for your clubmates"
             />
           </label>
-          {message && <p className="muted">{message}</p>}
-          {error && (
-            <div className="card" style={{ borderColor: "rgba(244,67,54,.4)" }}>
-              {error}
-            </div>
-          )}
-          <button
-            type="button"
-            className="btnPrimary"
-            disabled={isBusy}
-            onClick={handleSave}
-          >
-            {isBusy ? "Saving..." : "Save Profile"}
+          {message && <p className="alertSuccess">{message}</p>}
+          {error && <div className="alertError">{error}</div>}
+          <button type="button" className="btnPrimary btnBlock" disabled={isBusy} onClick={handleSave}>
+            {isBusy ? "Saving…" : "Save profile"}
           </button>
         </div>
       </div>

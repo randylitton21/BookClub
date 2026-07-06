@@ -7,8 +7,11 @@ import { useAuth } from "@/lib/authContext";
 import { getClub } from "@/lib/clubStore";
 import { formatClosedAtDate, getClosedRead } from "@/lib/readStore";
 import type { ClosedRead, Club } from "@/lib/types";
+import BookCover from "../../../../../_components/BookCover";
 import PageTitleCard from "../../../../../_components/PageTitleCard";
 import ReturnNavButton from "../../../../_components/ReturnNavButton";
+import ReaderProfileLink from "../../../../_components/ReaderProfileLink";
+import ProfileAvatar from "../../../../_components/ProfileAvatar";
 
 export default function ClosedReadPage() {
   const params = useParams();
@@ -50,16 +53,18 @@ export default function ClosedReadPage() {
     load();
   }, [load]);
 
-  if (loading) return <p className="muted">Loading...</p>;
+  if (loading) return <p className="muted">Loading…</p>;
 
   if (!club || !read) {
     return (
       <div className="card">
         <p>{error || "Read not found."}</p>
-        <ReturnNavButton
-          fallbackHref={`/app/clubs/${clubId}`}
-          fallbackLabel={club?.name || "club"}
-        />
+        <div className="pageActionsRow">
+          <ReturnNavButton
+            fallbackHref={`/app/clubs/${clubId}`}
+            fallbackLabel={club?.name || "club"}
+          />
+        </div>
       </div>
     );
   }
@@ -78,24 +83,43 @@ export default function ClosedReadPage() {
       />
 
       <div className="clubHomeStack">
-        <div className="card">
-          <p className="muted" style={{ marginBottom: 16 }}>
-            Closed {formatClosedAtDate(read.closedAt)} · {club.name}
-          </p>
-          <div className="clubLeaderReview">
-            <p className="clubBookHeroLabel muted">Leader&apos;s final review</p>
-            <p style={{ whiteSpace: "pre-wrap" }}>{read.leaderFinalReview}</p>
+        <div className="card readDetailHero">
+          <BookCover title={read.title} size="lg" />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <p className="readDetailMeta muted">
+              Closed {formatClosedAtDate(read.closedAt)} · {club.name}
+            </p>
+            <div className="clubLeaderReview">
+              <p className="sectionLabel">Leader&apos;s final review</p>
+              <p style={{ whiteSpace: "pre-wrap", marginTop: 8, lineHeight: 1.55 }}>
+                {read.leaderFinalReview}
+              </p>
+            </div>
           </div>
         </div>
 
         {isMember && read.memberReviews.length > 0 && (
-          <div className="card">
-            <h2 style={{ marginBottom: 12, fontSize: 18 }}>Member reviews</h2>
+          <div className="card card--section">
+            <h2 className="sectionHeading">Member reviews</h2>
+            <p className="sectionHint muted">
+              {read.memberReviews.length} club member
+              {read.memberReviews.length === 1 ? "" : "s"} shared their take.
+            </p>
             <ul className="memberList">
               {read.memberReviews.map((review) => (
-                <li key={review.uid} className="card" style={{ marginBottom: 8 }}>
-                  <strong>{review.displayName}</strong>
-                  <p style={{ marginTop: 6, whiteSpace: "pre-wrap" }}>{review.text}</p>
+                <li key={review.uid} className="memberReviewCard">
+                  <ReaderProfileLink
+                    uid={review.uid}
+                    returnTo={`/app/clubs/${club.clubId}/reads/${read.readId}`}
+                    returnLabel={read.title}
+                    className="postItemAuthorLink"
+                  >
+                    <ProfileAvatar displayName={review.displayName} size="sm" />
+                    <strong>{review.displayName}</strong>
+                  </ReaderProfileLink>
+                  <p style={{ marginTop: 8, whiteSpace: "pre-wrap", lineHeight: 1.5, paddingLeft: 40 }}>
+                    {review.text}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -103,11 +127,7 @@ export default function ClosedReadPage() {
         )}
       </div>
 
-      {error && (
-        <div className="card" style={{ marginTop: 14, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="alertError" style={{ marginTop: 14 }}>{error}</div>}
     </>
   );
 }

@@ -14,6 +14,14 @@ import {
 } from "@/lib/quizStore";
 import type { Quiz, Week } from "@/lib/types";
 import PageTitleCard from "../../../../../../_components/PageTitleCard";
+import ReturnNavButton from "../../../../../_components/ReturnNavButton";
+
+function resultBannerClass(text: string | null): string {
+  if (!text) return "quizResultBanner";
+  if (text.includes("passed") || text.includes("Passed")) return "quizResultBanner quizResultBanner--pass";
+  if (text.includes("Need") || text.includes("Try again")) return "quizResultBanner quizResultBanner--fail";
+  return "quizResultBanner quizResultBanner--info";
+}
 
 export default function QuizPage() {
   const params = useParams();
@@ -81,7 +89,7 @@ export default function QuizPage() {
       const score = scoreQuiz(quiz.questions, answers);
       const result = await submitQuizResult({ weekId, uid: user.uid, score });
       if (result.passed) {
-        setResultText(`You passed with ${score}%! Opening discussion...`);
+        setResultText(`You passed with ${score}%! Opening discussion…`);
         setTimeout(() => {
           router.push(`/app/clubs/${clubId}/room/${weekId}`);
         }, 800);
@@ -95,15 +103,17 @@ export default function QuizPage() {
     }
   }
 
-  if (loading) return <p className="muted">Loading quiz...</p>;
+  const answeredCount = answers.filter((a) => a >= 0).length;
+
+  if (loading) return <p className="muted">Loading quiz…</p>;
 
   if (error && !quiz) {
     return (
       <div className="card">
         <p>{error}</p>
-        <Link href={`/app/clubs/${clubId}`} className="btnSecondary" style={{ marginTop: 12, display: "inline-block" }}>
-          Back to club
-        </Link>
+        <div className="pageActionsRow">
+          <ReturnNavButton fallbackHref={`/app/clubs/${clubId}`} fallbackLabel="club" />
+        </div>
       </div>
     );
   }
@@ -111,54 +121,69 @@ export default function QuizPage() {
   return (
     <>
       <PageTitleCard
-        title={week ? `Quiz: ${week.label}` : "Quiz"}
+        title={week ? week.label : "Weekly quiz"}
         subtitle="Pass the quiz to unlock this week's discussion."
         actions={
-          <Link href={`/app/clubs/${clubId}`} className="btnSecondary">
-            Back to club
-          </Link>
+          <ReturnNavButton fallbackHref={`/app/clubs/${clubId}`} fallbackLabel="club" />
         }
       />
 
       {resultText && (
-        <div className="card" style={{ marginTop: 14 }}>
-          <p>{resultText}</p>
+        <div className={resultBannerClass(resultText)} style={{ marginBottom: 14 }}>
+          {resultText}
         </div>
       )}
 
       {quiz && (
-        <div className="card" style={{ marginTop: 14 }}>
+        <div className="card">
+          <p className="quizProgress">
+            {answeredCount} of {quiz.questions.length} answered
+          </p>
+
           {quiz.questions.map((q, qi) => (
-            <div key={qi} style={{ marginBottom: 18 }}>
-              <p style={{ marginBottom: 8 }}>
-                <strong>{qi + 1}.</strong> {q.questionText}
+            <div key={qi} className="quizQuestionBlock">
+              <p className="quizQuestionText">
+                <span className="quizQuestionNum">{qi + 1}.</span>
+                {q.questionText}
               </p>
-              <div className="formGrid">
-                {q.choices.map((choice, ci) => (
-                  <label key={ci} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input
-                      type="radio"
-                      name={`q-${qi}`}
-                      checked={answers[qi] === ci}
-                      onChange={() => {
-                        const next = [...answers];
-                        next[qi] = ci;
-                        setAnswers(next);
-                      }}
-                    />
-                    <span>{choice}</span>
-                  </label>
-                ))}
+              <div className="quizChoices">
+                {q.choices.map((choice, ci) => {
+                  const selected = answers[qi] === ci;
+                  return (
+                    <label
+                      key={ci}
+                      className={`quizChoice${selected ? " quizChoice--selected" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name={`q-${qi}`}
+                        checked={selected}
+                        onChange={() => {
+                          const next = [...answers];
+                          next[qi] = ci;
+                          setAnswers(next);
+                        }}
+                      />
+                      <span className="quizChoiceMarker" aria-hidden>
+                        {selected ? "✓" : ""}
+                      </span>
+                      <span>{choice}</span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           ))}
-          {error && (
-            <div className="card" style={{ marginBottom: 12, borderColor: "rgba(244,67,54,.4)" }}>
-              {error}
-            </div>
-          )}
-          <button type="button" className="btnPrimary" disabled={busy} onClick={handleSubmit}>
-            {busy ? "Submitting..." : "Submit quiz"}
+
+          {error && <div className="alertError" style={{ marginBottom: 14 }}>{error}</div>}
+
+          <button
+            type="button"
+            className="btnAccent btnBlock"
+            disabled={busy || answeredCount < quiz.questions.length}
+            onClick={handleSubmit}
+          >
+            {busy ? "Submitting…" : "Submit quiz"}
           </button>
         </div>
       )}

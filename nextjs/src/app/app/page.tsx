@@ -10,6 +10,8 @@ import {
   listClubsForUser,
 } from "@/lib/clubStore";
 import type { Club } from "@/lib/types";
+import BookCover from "../_components/BookCover";
+import PageTitleCard from "../_components/PageTitleCard";
 
 export default function ClubsHomePage() {
   const { user } = useAuth();
@@ -74,26 +76,28 @@ export default function ClubsHomePage() {
   }
 
   return (
-    <div className="card" style={{ marginTop: 14 }}>
-      <div className="myClubsHeader">
-        <div>
-          <h1 style={{ marginBottom: 4 }}>My Clubs</h1>
-          <p className="muted">Tap a club to open it, or join with a Club ID below.</p>
-        </div>
-        <button
-          type="button"
-          className="btnPrimary"
-          onClick={() => setShowCreate((v) => !v)}
-        >
-          {showCreate ? "Cancel" : "Create Club"}
-        </button>
-      </div>
+    <>
+      <PageTitleCard
+        title="My Clubs"
+        subtitle="Tap a club to open it, or join with a Club ID below."
+        actions={
+          <button
+            type="button"
+            className={showCreate ? "btnSecondary" : "btnAccent"}
+            onClick={() => setShowCreate((v) => !v)}
+          >
+            {showCreate ? "Cancel" : "+ Create club"}
+          </button>
+        }
+      />
 
       {showCreate && (
-        <div className="myClubsCreate" style={{ marginTop: 14 }}>
-          <h2 style={{ marginBottom: 10, fontSize: 18 }}>New club</h2>
+        <div className="card card--accent" style={{ marginBottom: 14 }}>
+          <h2 className="fontDisplay" style={{ marginBottom: 12, fontSize: "1.15rem" }}>
+            New club
+          </h2>
           <div className="formGrid">
-            <label style={{ display: "grid", gap: 6 }}>
+            <label className="formLabel">
               <span className="muted">Club name</span>
               <input
                 className="inputField"
@@ -102,7 +106,7 @@ export default function ClubsHomePage() {
                 placeholder="Tuesday Night Readers"
               />
             </label>
-            <label style={{ display: "grid", gap: 6 }}>
+            <label className="formLabel">
               <span className="muted">Book title</span>
               <input
                 className="inputField"
@@ -111,7 +115,7 @@ export default function ClubsHomePage() {
                 placeholder="The book you're reading"
               />
             </label>
-            <label style={{ display: "grid", gap: 6 }}>
+            <label className="formLabel">
               <span className="muted">Author</span>
               <input
                 className="inputField"
@@ -122,11 +126,11 @@ export default function ClubsHomePage() {
             </label>
             <button
               type="button"
-              className="btnPrimary"
+              className="btnPrimary btnBlock"
               disabled={joinBusy || !clubName || !bookTitle || !bookAuthor}
               onClick={handleCreate}
             >
-              {joinBusy ? "Creating..." : "Create Club"}
+              {joinBusy ? "Creating…" : "Create club"}
             </button>
             <p className="muted" style={{ fontSize: 13 }}>
               As club leader, closing the story for each book is your duty when the club finishes a read.
@@ -135,33 +139,38 @@ export default function ClubsHomePage() {
         </div>
       )}
 
-      <div className="myClubsList" style={{ marginTop: 14 }}>
+      <div className="formGrid">
         {loading ? (
-          <p className="muted">Loading...</p>
+          <p className="muted">Loading your clubs…</p>
         ) : clubs.length === 0 ? (
-          <p className="muted">No clubs yet. Create one or join with a Club ID below.</p>
-        ) : (
-          <div className="formGrid">
-            {clubs.map((club) => (
-              <Link
-                key={club.clubId}
-                href={`/app/clubs/${club.clubId}`}
-                className="card myClubsListItem"
-              >
-                <strong>{club.name}</strong>
-                <div className="muted" style={{ fontSize: 14 }}>
-                  {club.bookTitle} by {club.bookAuthor}
-                </div>
-              </Link>
-            ))}
+          <div className="card card--section">
+            <p className="muted">No clubs yet. Create one above or join with a Club ID below.</p>
           </div>
+        ) : (
+          clubs.map((club) => (
+            <Link
+              key={club.clubId}
+              href={`/app/clubs/${club.clubId}`}
+              className="card myClubsListItem"
+            >
+              <BookCover title={club.bookTitle || club.name} size="sm" />
+              <div className="myClubsListItemBody">
+                <div className="myClubsListItemTitle">{club.name}</div>
+                <div className="myClubsListItemBook">
+                  {club.bookTitle ? `${club.bookTitle} · ${club.bookAuthor}` : "No active book"}
+                </div>
+              </div>
+            </Link>
+          ))
         )}
       </div>
 
-      <div className="myClubsJoin" style={{ marginTop: 18, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
-        <h2 style={{ marginBottom: 10, fontSize: 18 }}>Join a club</h2>
+      <div className="card myClubsDivider">
+        <h2 className="fontDisplay" style={{ marginBottom: 12, fontSize: "1.15rem" }}>
+          Join a club
+        </h2>
         <div className="formGrid">
-          <label style={{ display: "grid", gap: 6 }}>
+          <label className="formLabel">
             <span className="muted">Club ID</span>
             <input
               className="inputField"
@@ -172,11 +181,11 @@ export default function ClubsHomePage() {
           </label>
           <button
             type="button"
-            className="btnPrimary"
+            className="btnPrimary btnBlock"
             disabled={joinBusy || !joinClubId.trim()}
             onClick={handleLookupClub}
           >
-            {joinBusy ? "Looking up..." : "View club"}
+            {joinBusy ? "Looking up…" : "View club"}
           </button>
           <p className="muted" style={{ fontSize: 13 }}>
             Opens the club homepage where you can see what they&apos;re reading and request to join.
@@ -184,12 +193,8 @@ export default function ClubsHomePage() {
         </div>
       </div>
 
-      {message && <p className="muted" style={{ marginTop: 12 }}>{message}</p>}
-      {error && (
-        <div className="card" style={{ marginTop: 12, borderColor: "rgba(244,67,54,.4)" }}>
-          {error}
-        </div>
-      )}
-    </div>
+      {message && <p className="alertSuccess" style={{ marginTop: 12 }}>{message}</p>}
+      {error && <div className="alertError" style={{ marginTop: 12 }}>{error}</div>}
+    </>
   );
 }
