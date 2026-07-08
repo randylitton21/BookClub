@@ -53,7 +53,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="landingSection">
+        <section className="landingSection landingSection--steps">
           <h2 className="sectionHeading">How it works</h2>
           <ol className="landingSteps">
             <li className="landingStep">

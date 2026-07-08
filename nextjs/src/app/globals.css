@@ -742,12 +742,35 @@ textarea:focus-visible {
 .landingPage {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: clamp(36px, 6vw, 56px);
   padding-bottom: 12px;
 }
 
 .landingSection {
+  width: 100%;
+  max-width: min(65ch, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.landingSection--steps {
   max-width: 100%;
+  text-align: left;
+  align-items: stretch;
+}
+
+.landingSection--steps .sectionHeading {
+  text-align: center;
+  width: 100%;
+}
+
+.landingSection .sectionHeading {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 .landingHeroNew {
@@ -761,6 +784,7 @@ textarea:focus-visible {
   letter-spacing: -0.03em;
   margin-top: 18px;
   margin-bottom: 6px;
+  width: 100%;
 }
 
 .landingHeroNewTagline {
@@ -770,6 +794,7 @@ textarea:focus-visible {
   letter-spacing: -0.02em;
   color: var(--primary);
   margin-bottom: 12px;
+  width: 100%;
 }
 
 .landingHeroNewSubtitle {
@@ -777,21 +802,29 @@ textarea:focus-visible {
   line-height: 1.5;
   color: var(--text);
   max-width: 38ch;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 8px;
 }
 
 .landingHeroNewEtymology {
   font-size: 0.92rem;
   max-width: 38ch;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 4px;
 }
 
 .landingHeroActions--solo {
   margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .landingProse {
-  max-width: 65ch;
+  width: 100%;
+  text-align: center;
 }
 
 .landingProse p {
@@ -809,18 +842,25 @@ textarea:focus-visible {
   flex-direction: column;
   gap: 28px;
   margin-top: 8px;
+  width: 100%;
 }
 
 .landingStep {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 .landingStepText {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  max-width: 36ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .landingStepNum {
@@ -848,29 +888,36 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 58ch;
+  width: 100%;
+  max-width: 42ch;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 .landingWhyList li {
   position: relative;
-  padding-left: 22px;
+  padding-left: 0;
   line-height: 1.55;
 }
 
 .landingWhyList li::before {
   content: "";
-  position: absolute;
-  left: 0;
-  top: 0.55em;
+  display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--accent);
+  margin-right: 10px;
+  vertical-align: 0.15em;
 }
 
 .landingFounder {
-  max-width: 65ch;
-  border-left: 4px solid var(--accent);
+  width: 100%;
+  text-align: center;
+  border-left: none;
+  border-top: 4px solid var(--accent);
+  padding-top: 4px;
 }
 
 .landingFounder p + p {
@@ -880,8 +927,8 @@ textarea:focus-visible {
 
 .landingFinalCta {
   text-align: center;
+  width: 100%;
   max-width: 360px;
-  margin: 0 auto;
 }
 
 .landingFinalCtaLine {
@@ -1091,6 +1138,12 @@ textarea:focus-visible {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
     gap: 24px;
     align-items: center;
+  }
+
+  .landingStepText {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .landingStep:nth-child(even) .landingMockFrame {
